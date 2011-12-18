@@ -41,7 +41,7 @@ sub load {
    }
 
    # get the data from the database
-   my @quoted = map { $Game::dbh->quote_identifier($_) } @_;
+   my @quoted = map { $Game::dbh->quote_identifier($_) } @_, 'id';
    my $quoted = join ', ', @quoted;
    my $sql = "select $quoted from $table where id = ? and gameid = ?";
    my $sth = $Game::dbh->prepare($sql);
