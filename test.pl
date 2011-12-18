@@ -10,7 +10,7 @@ isa_ok($game, 'Game');
 isa_ok($game, 'Game::Object');
 isa_ok($Game::dbh, 'DBI::db');
 ok($Game::counter == $old_counter + 1, 'counter was incremented');
-ok($game->{id} == 0, 'id field is 0');
+ok($game->{id} eq '0', 'id field is 0');
 ok($Game::objects{ $game->{id} } eq $game, 'added to %objects');
 ok(defined $Game::gameid, '$Game::gameid is defined after new()');
 
@@ -53,7 +53,7 @@ $game = Game->load('TEST.db', $saved_id);
 isa_ok($game, 'Game');
 isa_ok($game, 'Game::Object');
 isa_ok($Game::dbh, 'DBI::db');
-ok($game->{id} == 0, 'id field is 0');
+ok($game->{id} eq '0', 'id field is 0');
 ok(defined $Game::gameid, '$Game::id is defined after load()');
 
 # postpone further tests
@@ -61,6 +61,10 @@ ok(defined $Game::gameid, '$Game::id is defined after load()');
 
 # describe() method
 ok($game->describe() eq 'test game', 'description set after load()');
+
+# change description
+$game->{description} = 'modified test game';
+$game->save('description');
 
 # create a Room
 $old_counter = $Game::counter; # save counter state
