@@ -6,12 +6,13 @@ BEGIN { use_ok('Game'); }
 # create a new Game
 my $old_counter = $Game::counter; # save counter state
 my $game = Game->new('TEST.db', 'test game');
-ok($Game::counter == $old_counter + 1, 'counter was incremented');
-ok($Game::objects{ $game->{id} } eq $game, 'added to %objects');
 isa_ok($game, 'Game');
 isa_ok($game, 'Game::Object');
-ok(defined $Game::gameid, '$Game::gameid is defined after new()');
 isa_ok($Game::dbh, 'DBI::db');
+ok($Game::counter == $old_counter + 1, 'counter was incremented');
+ok($game->{id} == 0, 'id field is 0');
+ok($Game::objects{ $game->{id} } eq $game, 'added to %objects');
+ok(defined $Game::gameid, '$Game::gameid is defined after new()');
 
 # foreign_keys pragma should be set
 my $sth = $Game::dbh->prepare('pragma foreign_keys');
@@ -36,6 +37,8 @@ ok($game->describe() eq 'test game', 'description set after new()');
 # save the id for future use
 my $saved_id = $Game::gameid;
 
+$game->save('description');
+
 # allow us to create a new Game
 undef($Game::gameid);
 undef($Game::dbh);
@@ -49,8 +52,9 @@ $game = Game->load('TEST.db', $saved_id);
 #ok($Game::counter == $old_counter + 1, 'counter was incremented');
 isa_ok($game, 'Game');
 isa_ok($game, 'Game::Object');
-ok(defined $Game::gameid, '$Game::id is defined after load()');
 isa_ok($Game::dbh, 'DBI::db');
+ok($game->{id} == 0, 'id field is 0');
+ok(defined $Game::gameid, '$Game::id is defined after load()');
 
 # postpone further tests
 #exit 0;
