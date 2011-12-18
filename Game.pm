@@ -114,9 +114,8 @@ sub new {
    Carp::croak "There can only be one Game" if defined($Game::gameid);
    my ($class, $db, $description) = @_;
    $Game::dbh = _dbh($db); # set the package variable
-   my $sql_new = 'insert into Game (description) values (?)';
-   my $sth_new = $dbh->prepare($sql_new);
-   $sth_new->execute($description);
+   my $sql = 'insert into Game (id) values (0)';
+   $dbh->do($sql);
    $Game::gameid = $dbh->last_insert_id('', '', '', '');
    return $class->SUPER::new(description => $description);
 }
