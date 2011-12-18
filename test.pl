@@ -7,6 +7,7 @@ BEGIN { use_ok('Game'); }
 my $old_counter = $Game::counter; # save counter state
 my $game = Game->new('TEST.db', 'test game');
 ok($Game::counter == $old_counter + 1, 'counter was incremented');
+ok($Game::objects{ $game->{id} } eq $game, 'added to %objects');
 isa_ok($game, 'Game');
 isa_ok($game, 'Game::Object');
 ok(defined $Game::gameid, '$Game::gameid is defined after new()');
@@ -63,4 +64,7 @@ my $room1 = Game::Room->new(description => 'room 1');
 isa_ok($room1, 'Game::Room');
 isa_ok($room1, 'Game::Object');
 ok($Game::counter == $old_counter + 1, 'counter was incremented');
+ok($Game::objects{ $room1->{id} } eq $room1, 'added to %objects');
 ok($room1 eq 'room 1', 'description was correctly set');
+
+$room1->save('description');
