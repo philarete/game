@@ -43,7 +43,7 @@ sub load {
    # get the data from the database
    my @quoted = map { $Game::dbh->quote_identifier($_) } @_;
    my $quoted = join ', ', @quoted;
-   my $sql = "select $quoted from $class where id = ? and gameid = ?";
+   my $sql = "select $quoted from $table where id = ? and gameid = ?";
    my $sth = $Game::dbh->prepare($sql);
    $sth->execute($id, $Game::gameid);
    my $data = $sth->fetchrow_hashref;
@@ -54,6 +54,38 @@ sub load {
    }
 
    return $Game::objects{$id} = bless $data, $class;
+}
+
+sub save {
+   my $self = shift;
+
+   # construct lists for update and insert sql
+   my ($k, $v, @fields, @values);
+   foreach (@_, 'id', 'gameid') {
+      my ($k, $v);
+
+      $k = $Game::dbh->quote_identifier($_);
+
+      if ($_ eq 'gameid') {
+         $v = $Game::dbh->quote( $Game::gameid );
+      } else {
+         $v = $Game::dbh->quote( $self->{$_} );
+      }
+
+      push @fields, $k;
+      push @values, $v;
+   }
+
+   # portion of class name after final ::
+   my $table = ( split( '::', ref($self) ) )[-1];
+   # join lists
+   my $fields = join(', ', @fields);
+   my $values = join(', ', @values);
+
+   my $sql = "insert or replace into $table ($fields) values ($values)";
+   #Carp::carp $sql;
+
+   $Game::dbh->do($sql);
 }
 
 sub describe {
