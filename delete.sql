@@ -1,2 +1,2 @@
-delete from Game;
 delete from Room;
+delete from Game;
