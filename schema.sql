@@ -1,7 +1,7 @@
 CREATE TABLE Game (gameid integer primary key, 
-                   id integer default 0, -- should always be zero
+                   id integer not null, -- should always be zero
                    description text);
-CREATE TABLE Room (id integer, 
+CREATE TABLE Room (id integer not null, 
                    gameid integer references Game(gameid),
                    description text,
                    primary key (id, gameid));
