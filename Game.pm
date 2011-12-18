@@ -4,7 +4,7 @@ use Carp;
 
 # our base class for common methods
 package Game::Object;
-use overload '""' => \&Game::Object::describe, fallback => 1;
+#use overload '""' => \&Game::Object::describe, fallback => 1;
 
 sub new {
 
