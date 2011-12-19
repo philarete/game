@@ -72,7 +72,6 @@ ok($game->describe() eq 'test game', 'description set after load()');
 
 # change description of game
 $game->{description} = 'modified test game';
-$game->save();
 
 # load the saved Room from the database
 $room1 = Game::Room->load($roomid);
@@ -83,5 +82,6 @@ ok($Game::objects{ $room1->{id} } eq $room1, 'added to %objects');
 ok($room1->describe() eq 'room 1', 'description was correctly set');
 
 # change description of room
-#$room1->{description} = 'modified room 1';
-#$room1->save();
+$room1->{description} = 'modified room 1';
+
+$game->save_all;

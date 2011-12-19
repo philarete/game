@@ -46,11 +46,6 @@ sub load {
       Carp::croak "object with id $id already exists";
    }
 
-   # update $Game::counter if necessary
-   if ($id >= $Game::counter) {
-      $Game::counter = $id + 1;
-   }
-
    return $Game::objects{$id} = bless $data, $class;
 }
 
@@ -89,12 +84,18 @@ sub save {
    #Carp::carp $sql;
 
    $Game::dbh->do($sql);
+
+   return $self;
 }
 
 sub save_all {
+   my $self = shift;
+
    foreach my $obj (values %Game::objects) {
       $obj->save();
    }
+
+   return $self;
 }
       
 
@@ -110,7 +111,7 @@ our $gameid;
 our $dbh;
 our $counter = 0; # to give every Game::Object a unique id
 our %objects = (); # hash of all Game::Object objects
-our @saveable = qw(description); # parameters saved by save() method
+our @saveable = qw(description counter); # parameters saved by save() method
 
 # not a method
 sub _dbh {
@@ -125,10 +126,17 @@ sub new {
    Carp::croak "There can only be one Game" if defined($Game::gameid);
    my ($class, $db, $description) = @_;
    $Game::dbh = _dbh($db); # set the package variable
-   my $sql = 'insert into Game (id) values (0)';
+   my $sql = 'insert into Game (id, counter) values (0, 0)';
    $dbh->do($sql);
    $Game::gameid = $dbh->last_insert_id('', '', '', '');
    return $class->SUPER::new(description => $description);
+}
+
+sub save {
+   my $self = shift;
+   # set counter field so it is saved
+   $self->{counter} = $Game::counter;
+   return $self->SUPER::save();
 }
 
 sub load {
@@ -136,7 +144,9 @@ sub load {
    my ($class, $db, $gameid) = @_;
    $Game::gameid = $gameid;
    $Game::dbh = _dbh($db); # set the package variable
-   return $class->SUPER::load(0, 'description');
+   my $game = $class->SUPER::load(0, 'description');
+   $Game::counter = $game->{counter}; # set the package counter
+   return $game;
 }
 
 package Game::Room;
