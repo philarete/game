@@ -21,7 +21,7 @@ sub new {
 }
 
 # load an existing object from the database
-# parameters: object id, list of parameters to get from the db
+# parameters: object id
 sub load {
 
    my $class = shift;
@@ -30,18 +30,11 @@ sub load {
    # portion of class name after final ::
    my $table = (split('::', $class))[-1];
 
-   # get the max id from the database
-   # update $Game::gameid if necessary
-   my $sql_maxid = "select max(id) from $class where gameid = ?";
-   my $sth_maxid = $Game::dbh->prepare($sql_maxid);
-   $sth_maxid->execute($Game::gameid);
-   my ($maxid) = $sth_maxid->fetchrow();
-   if ($maxid > $Game::counter) {
-      $Game::counter = $maxid + 1;
-   }
+   no strict 'refs'; # need to access @saveable symbolically
+   my @saveable = @{ $class . '::saveable' };
 
    # get the data from the database
-   my @quoted = map { $Game::dbh->quote_identifier($_) } @_, 'id';
+   my @quoted = map { $Game::dbh->quote_identifier($_) } @saveable, 'id';
    my $quoted = join ', ', @quoted;
    my $sql = "select $quoted from $table where id = ? and gameid = ?";
    my $sth = $Game::dbh->prepare($sql);
@@ -53,15 +46,25 @@ sub load {
       Carp::croak "object with id $id already exists";
    }
 
+   # update $Game::counter if necessary
+   if ($id >= $Game::counter) {
+      $Game::counter = $id + 1;
+   }
+
    return $Game::objects{$id} = bless $data, $class;
 }
 
+# parameters - fields to be saved to database
 sub save {
    my $self = shift;
+   my $class = ref($self);
+
+   no strict 'refs'; # need to access @saveable symbolically
+   my @saveable = @{ $class . '::saveable' };
 
    # construct lists for update and insert sql
    my ($k, $v, @fields, @values);
-   foreach (@_, 'id', 'gameid') {
+   foreach (@saveable, 'id', 'gameid') {
       my ($k, $v);
 
       $k = $Game::dbh->quote_identifier($_);
@@ -88,6 +91,13 @@ sub save {
    $Game::dbh->do($sql);
 }
 
+sub save_all {
+   foreach my $obj (values %Game::objects) {
+      $obj->save();
+   }
+}
+      
+
 sub describe {
    my ($self) = @_;
    return $self->{description};
@@ -100,6 +110,7 @@ our $gameid;
 our $dbh;
 our $counter = 0; # to give every Game::Object a unique id
 our %objects = (); # hash of all Game::Object objects
+our @saveable = qw(description); # parameters saved by save() method
 
 # not a method
 sub _dbh {
@@ -131,6 +142,7 @@ sub load {
 package Game::Room;
 
 our @ISA = 'Game::Object';
+our @saveable = qw(description); # parameters saved by save() method
 
 # return a true value
 1;
