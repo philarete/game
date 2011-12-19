@@ -34,7 +34,7 @@ ok($game->describe() eq 'test game', 'description set after new()');
 # stringification should be overloaded
 #ok(sprintf('%s', $game) eq $game->describe(), 'stringification is overloaded');
 
-# create a Room
+# create two Rooms
 $old_counter = $Game::counter; # save counter state
 my $room1 = Game::Room->new(description => 'room 1');
 isa_ok($room1, 'Game::Room');
@@ -43,19 +43,28 @@ ok($Game::counter == $old_counter + 1, 'counter was incremented');
 ok($Game::objects{ $room1->{id} } eq $room1, 'added to %objects');
 ok($room1->describe() eq 'room 1', 'description was correctly set');
 
+my $room2 = Game::Room->new(description => 'room 2');
+
+$room1->set_north($room2);
+
+ok($room1->north eq $room2, 'room 2 is to the north of room1');
+ok($room2->south eq $room1, 'room 1 is to the south of room2');
+
 $game->save_all();
 
 # save the id so we can reload it later
 my $gameid = $Game::gameid;
-my $roomid = $room1->{ id };
+my $room1id = $room1->{ id };
+my $room2id = $room2->{ id };
 
-# allow us to create a new Game
+# clear all
 undef($Game::gameid);
 undef($Game::dbh);
 $Game::counter = 0;
 %Game::objects = ();
 undef($game);
 undef($room1);
+undef($room2);
 
 # load the saved Game from the database
 $old_counter = $Game::counter; # save counter state
@@ -71,17 +80,20 @@ ok(defined $Game::gameid, '$Game::id is defined after load()');
 ok($game->describe() eq 'test game', 'description set after load()');
 
 # change description of game
-$game->{description} = 'modified test game';
+#$game->{description} = 'modified test game';
 
-# load the saved Room from the database
-$room1 = Game::Room->load($roomid);
+# load the saved Rooms from the database
+$game->load_all;
+
+$room1 = $Game::objects{$room1id};
 isa_ok($room1, 'Game::Room');
-isa_ok($room1, 'Game::Object');
-#ok($Game::counter == $old_counter + 1, 'counter was incremented');
-ok($Game::objects{ $room1->{id} } eq $room1, 'added to %objects');
 ok($room1->describe() eq 'room 1', 'description was correctly set');
 
+$room2 = $Game::objects{$room2id};
+isa_ok($room2, 'Game::Room');
+ok($room2->describe() eq 'room 2', 'description was correctly set');
+
 # change description of room
-$room1->{description} = 'modified room 1';
+#$room1->{description} = 'modified room 1';
 
 $game->save_all;

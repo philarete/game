@@ -90,17 +90,19 @@ sub save {
 
 sub save_all {
    my $self = shift;
-
    foreach my $obj (values %Game::objects) {
       $obj->save();
    }
-
    return $self;
 }
-      
+
+sub id {
+   my $self = shift;
+   return $self->{id};
+}
 
 sub describe {
-   my ($self) = @_;
+   my $self = shift;
    return $self->{description};
 }
 
@@ -149,10 +151,75 @@ sub load {
    return $game;
 }
 
+sub load_all {
+   my $self = shift;
+   my @classes = qw( Game::Room );
+   my $sql_template = 'select id from %s where gameid = ?';
+
+   foreach my $class (@classes) {
+      my $table = (split('::', $class))[-1];
+      my $sql = sprintf($sql_template, $Game::dbh->quote_identifier($table));
+      my $sth = $Game::dbh->prepare($sql);
+      $sth->execute($Game::gameid);
+      while (my ($id) = $sth->fetchrow) {
+         $class->load($id);
+      }
+   }
+   return $self;
+}
+
 package Game::Room;
 
 our @ISA = 'Game::Object';
 our @saveable = qw(description); # parameters saved by save() method
+
+sub north {
+   my $self = shift;
+   return $Game::objects{ $self->{north} };
+}
+
+sub south {
+   my $self = shift;
+   return $Game::objects{ $self->{south} };
+}
+
+sub east {
+   my $self = shift;
+   return $Game::objects{ $self->{east} };
+}
+
+sub west {
+   my $self = shift;
+   return $Game::objects{ $self->{west} };
+}
+
+# TODO relation info should be saved in package variable
+sub set_north {
+   my ($self, $north) = @_;
+   $self->{north} = $north->id;
+   $north->{south} = $self->id;
+   return $self;
+}
+
+sub set_south {
+   my ($self, $south) = @_;
+   $self->{south} = $south->id;
+   $south->{north} = $self->id;
+   return $self;
+}
+
+sub set_east {
+   my ($self, $east) = @_;
+   $self->{east} = $east->id;
+   $east->{west} = $self->id;
+   return $self;
+}
+
+sub set_west {
+   my ($self, $west) = @_;
+   $self->{west} = $west->id;
+   $west->{east} = $self->id;
+}
 
 # return a true value
 1;
