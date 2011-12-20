@@ -5,9 +5,8 @@ CREATE TABLE Game (gameid integer primary key,
 CREATE TABLE Room (id integer not null, 
                    gameid integer references Game(gameid),
                    description text,
+                   north integer,
+                   south integer,
+                   east integer,
+                   west integer,
                    primary key (id, gameid));
-CREATE TABLE north_south ( north integer unique,
-                           south integer unique );
-CREATE TABLE east_west ( east integer unique,
-                         west integer unique );
-                           

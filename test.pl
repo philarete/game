@@ -93,7 +93,10 @@ $room2 = $Game::objects{$room2id};
 isa_ok($room2, 'Game::Room');
 ok($room2->describe() eq 'room 2', 'description was correctly set');
 
+ok($room1->north eq $room2, 'room 2 is to the north of room1');
+ok($room2->south eq $room1, 'room 1 is to the south of room2');
+
 # change description of room
 #$room1->{description} = 'modified room 1';
 
-$game->save_all;
+#$game->save_all;

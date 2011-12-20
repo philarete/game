@@ -171,7 +171,8 @@ sub load_all {
 package Game::Room;
 
 our @ISA = 'Game::Object';
-our @saveable = qw(description); # parameters saved by save() method
+# parameters saved by save() method
+our @saveable = qw(description north south east west); 
 
 sub north {
    my $self = shift;
