@@ -54,6 +54,10 @@ ok($room2->south eq $room1, 'room1 is to the south of room2');
 ok($room2->east eq $room3, 'room3 is to the east of room2');
 ok($room3->west eq $room2, 'room2 is to the west of room3');
 
+say "Room 1 exits: ", join(', ', $room1->exits);
+say "Room 2 exits: ", join(', ', $room2->exits);
+say "Room 3 exits: ", join(', ', $room3->exits);
+
 # create a character
 my $pc = Game::Character->new(description => 'Brave Sir Robin',
                               hp => 10, damage => 4);
@@ -92,15 +96,15 @@ $game->save_all();
 # save the id so we can reload it later
 my $gameid = $Game::gameid;
 #say "gameid is $gameid";
-my $room1id = $room1->id;
+#my $room1id = $room1->id;
 #say "room1id is $room1id";
-my $room2id = $room2->id;
+#my $room2id = $room2->id;
 #say "room2id is $room2id";
-my $room3id = $room3->id;
+#my $room3id = $room3->id;
 #say "room3id is $room3id";
-my $pc_id = $pc->id;
+#my $pc_id = $pc->id;
 #say "pc_id is $pc_id";
-my $monster_id = $monster->id;
+#my $monster_id = $monster->id;
 #say "monster_id is $monster_id";
 
 # clear all
@@ -134,15 +138,23 @@ ok($game->describe() eq 'test game', 'description set after load()');
 # load the saved Rooms from the database
 $game->load_all;
 
-$room1 = $Game::objects{$room1id};
+my ($room1, $room2, $room3) = 
+   sort { $a->describe cmp $b->describe } $game->list_of('Room');
+
+#say $game->list_of('Room');
+
+# postpone further tests
+#exit 0;
+
+#$room1 = $Game::objects{$room1id};
 isa_ok($room1, 'Game::Room');
 ok($room1->describe() eq 'room 1', 'room1 description was correctly set');
 
-$room2 = $Game::objects{$room2id};
+#$room2 = $Game::objects{$room2id};
 isa_ok($room2, 'Game::Room');
 ok($room2->describe() eq 'room 2', 'room2 description was correctly set');
 
-$room3 = $Game::objects{$room3id};
+#$room3 = $Game::objects{$room3id};
 isa_ok($room3, 'Game::Room');
 ok($room3->describe() eq 'room 3', 'room3 description was correctly set');
 
@@ -151,12 +163,14 @@ ok($room2->south eq $room1, 'room1 is to the south of room2');
 ok($room2->east eq $room3, 'room3 is to the east of room2');
 ok($room3->west eq $room2, 'room2 is to the west of room3');
 
-$pc = $Game::objects{$pc_id};
+($pc) = $game->list_of('Character');
+#$pc = $Game::objects{$pc_id};
 #say "PC is ", $pc->describe;
 isa_ok($pc, 'Game::Character');
-ok($pc->location eq $room3, 'Sir Robin is still in room 3');
+ok($pc->location eq $room3, "$pc is still in room 3");
 
-$monster = $Game::objects{$monster_id};
+($monster) = $game->list_of('Monster');
+#$monster = $Game::objects{$monster_id};
 #say "Monster is ", $monster->describe;
 isa_ok($monster, 'Game::Monster');
-ok($monster->location eq $room3, 'Three-headed Giant is still in room 3');
+ok($monster->location eq $room3, "$monster is still in room 3");

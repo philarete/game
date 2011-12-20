@@ -172,6 +172,20 @@ sub load_all {
    return $self;
 }
 
+# list of all Game::Objects of a given class
+# in no particular order
+sub list_of {
+   my ($self, $class) = @_;
+   $class = 'Game::' . $class; 
+   my @rv;
+   foreach my $obj (values %Game::objects) {
+      if (ref($obj) eq $class) {
+        push @rv, $obj;
+     }
+   }
+   return @rv;
+}
+
 package Game::Room;
 
 our @ISA = 'Game::Object';
@@ -196,6 +210,17 @@ sub east {
 sub west {
    my $self = shift;
    return $Game::objects{ $self->{west} };
+}
+
+# list of available exits
+sub exits {
+   my $self = shift;
+   my @rv;
+   push @rv, 'north' if $self->north;
+   push @rv, 'south' if $self->south;
+   push @rv, 'east'  if $self->east;
+   push @rv, 'west'  if $self->west;
+   return @rv;
 }
 
 sub monster {
