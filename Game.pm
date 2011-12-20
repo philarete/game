@@ -37,6 +37,7 @@ sub load {
    my @quoted = map { $Game::dbh->quote_identifier($_) } @saveable, 'id';
    my $quoted = join ', ', @quoted;
    my $sql = "select $quoted from $table where id = ? and gameid = ?";
+   # Carp::carp $sql;
    my $sth = $Game::dbh->prepare($sql);
    $sth->execute($id, $Game::gameid);
    my $data = $sth->fetchrow_hashref;
@@ -46,6 +47,7 @@ sub load {
       Carp::croak "object with id $id already exists";
    }
 
+   # Carp::carp "Blessing object $id as $class";
    return $Game::objects{$id} = bless $data, $class;
 }
 
@@ -155,7 +157,7 @@ sub load {
 
 sub load_all {
    my $self = shift;
-   my @classes = qw( Game::Room );
+   my @classes = qw( Game::Room Game::Character Game::Monster );
    my $sql_template = 'select id from %s where gameid = ?';
 
    foreach my $class (@classes) {
@@ -174,7 +176,7 @@ package Game::Room;
 
 our @ISA = 'Game::Object';
 # parameters saved by save() method
-our @saveable = qw(description north south east west); 
+our @saveable = qw(description north south east west monster); 
 
 sub north {
    my $self = shift;
@@ -196,7 +198,11 @@ sub west {
    return $Game::objects{ $self->{west} };
 }
 
-# TODO relation info should be saved in package variable
+sub monster {
+   my $self = shift;
+   return $Game::objects{ $self->{monster} };
+}
+
 sub set_north {
    my ($self, $north) = @_;
    $self->{north} = $north->id;
@@ -222,6 +228,101 @@ sub set_west {
    my ($self, $west) = @_;
    $self->{west} = $west->id;
    $west->{east} = $self->id;
+   return $self;
+}
+
+sub set_monster {
+   my ($self, $monster) = @_;
+   $self->{monster} = $monster->id;
+   $monster->{location} = $self->id;
+   return $self;
+}
+
+# superclass for Character and Monster
+package Game::LivingThing;
+
+our @ISA = 'Game::Object';
+
+# should be implemented by subclasses
+sub set_location {
+   ...
+}
+
+sub location {
+   my $self = shift;
+   return $Game::objects{ $self->{location} };
+}
+
+sub go_north {
+   my $self = shift;
+   $self->set_location( $self->location->north );
+   return $self;
+}
+
+sub go_south {
+   my $self = shift;
+   $self->set_location( $self->location->south );
+   return $self;
+}
+
+sub go_east {
+   my $self = shift;
+   $self->set_location( $self->location->east );
+   return $self;
+}
+
+sub go_west {
+   my $self = shift;
+   $self->set_location( $self->location->west );
+   return $self;
+}
+
+sub hp {
+   my $self = shift;
+   return $self->{hp};
+}
+
+sub set_hp {
+   my ($self, $new_hp) = @_;
+   $self->{hp} = $new_hp;
+   return $self;
+}
+
+# random damage
+sub get_damage {
+   my $self = shift;
+   return int(rand($self->{damage})) + 1;
+}
+
+sub attack {
+   my ($self, $target) = @_;
+   my $damage = $self->get_damage;
+   #Carp::carp "Attack does $damage points of damage.";
+   $target->set_hp( $target->hp - $damage );
+   return $self;
+}
+
+package Game::Monster;
+
+our @ISA = 'Game::LivingThing';
+our @saveable = qw(description hp location damage);
+
+sub set_location {
+   my ($self, $location) = @_;
+   $self->{location} = $location->id;
+   $location->{monster} = $self->id;
+   return $self;
+}
+
+package Game::Character;
+
+our @ISA = 'Game::LivingThing';
+our @saveable = qw(description hp location damage);
+
+sub set_location {
+   my ($self, $location) = @_;
+   $self->{location} = $location->id;
+   return $self;
 }
 
 # return a true value

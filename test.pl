@@ -49,18 +49,59 @@ my $room3 = Game::Room->new(description => 'room 3');
 $room1->set_north($room2);
 $room2->set_east($room3);
 
-ok($room1->north eq $room2, 'room 2 is to the north of room1');
-ok($room2->south eq $room1, 'room 1 is to the south of room2');
-ok($room2->east eq $room3, 'room 3 is to the east of room2');
-ok($room3->west eq $room2, 'room 2 is to the west of room3');
+ok($room1->north eq $room2, 'room2 is to the north of room1');
+ok($room2->south eq $room1, 'room1 is to the south of room2');
+ok($room2->east eq $room3, 'room3 is to the east of room2');
+ok($room3->west eq $room2, 'room2 is to the west of room3');
+
+# create a character
+my $pc = Game::Character->new(description => 'Brave Sir Robin',
+                              hp => 10, damage => 4);
+isa_ok($pc, 'Game::Character');                           
+$pc->set_location($room1); # start in room 1
+ok($pc->location eq $room1, 'Sir Robin starts in room 1');
+
+$pc->go_north; # go north to room 2
+ok($pc->location eq $room2, 'Sir Robin moves north to room 2');
+
+$pc->go_east; # go east to room 3
+ok($pc->location eq $room3, 'Sir Robin moves east to room 3');
+
+# create a monster
+my $monster = Game::Monster->new(description => 'Three-headed Giant',
+                                 hp => 10, damage => 4);
+$monster->set_location($room3);
+isa_ok($monster, 'Game::Monster');
+ok($monster->location eq $room3, 'Three-headed Giant has location room3');
+ok($room3->monster eq $monster, 'Room 3 has monster Three-headed Giant');
+
+# save hp for comparison after attacks
+my $pc_original_hp = $pc->hp;
+my $monster_original_hp = $monster->hp;
+
+$pc->attack($monster);
+$monster->attack($pc);
+
+ok($pc->hp < $pc_original_hp, 'Sir Robin has fewer hp after attack');
+say "Sir Robin's hp: ", $pc->hp;
+ok($monster->hp < $monster_original_hp, 'Three-headed Giant has fewer hp after attack');
+say "Three-headed Giant's hp: ", $monster->hp;
 
 $game->save_all();
 
 # save the id so we can reload it later
 my $gameid = $Game::gameid;
-my $room1id = $room1->{ id };
-my $room2id = $room2->{ id };
-my $room3id = $room3->{ id };
+#say "gameid is $gameid";
+my $room1id = $room1->id;
+#say "room1id is $room1id";
+my $room2id = $room2->id;
+#say "room2id is $room2id";
+my $room3id = $room3->id;
+#say "room3id is $room3id";
+my $pc_id = $pc->id;
+#say "pc_id is $pc_id";
+my $monster_id = $monster->id;
+#say "monster_id is $monster_id";
 
 # clear all
 undef($Game::gameid);
@@ -70,6 +111,9 @@ $Game::counter = 0;
 undef($game);
 undef($room1);
 undef($room2);
+undef($room3);
+undef($pc);
+undef($monster);
 
 # load the saved Game from the database
 $old_counter = $Game::counter; # save counter state
@@ -107,7 +151,12 @@ ok($room2->south eq $room1, 'room1 is to the south of room2');
 ok($room2->east eq $room3, 'room3 is to the east of room2');
 ok($room3->west eq $room2, 'room2 is to the west of room3');
 
-# change description of room
-#$room1->{description} = 'modified room 1';
+$pc = $Game::objects{$pc_id};
+#say "PC is ", $pc->describe;
+isa_ok($pc, 'Game::Character');
+ok($pc->location eq $room3, 'Sir Robin is still in room 3');
 
-#$game->save_all;
+$monster = $Game::objects{$monster_id};
+#say "Monster is ", $monster->describe;
+isa_ok($monster, 'Game::Monster');
+ok($monster->location eq $room3, 'Three-headed Giant is still in room 3');
