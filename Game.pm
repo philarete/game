@@ -109,8 +109,10 @@ sub describe {
 package Game;
 
 our @ISA = 'Game::Object';
-our $gameid;
-our $dbh;
+
+# package variables
+our $gameid; # unique id for each game
+our $dbh; # database handle to sqlite
 our $counter = 0; # to give every Game::Object a unique id
 our %objects = (); # hash of all Game::Object objects
 our @saveable = qw(description counter); # parameters saved by save() method
