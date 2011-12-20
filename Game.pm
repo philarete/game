@@ -324,7 +324,7 @@ sub attack {
    my $damage = $self->get_damage;
    #Carp::carp "Attack does $damage points of damage.";
    $target->set_hp( $target->hp - $damage );
-   return $self;
+   return $damage;
 }
 
 package Game::Monster;
