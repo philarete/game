@@ -44,11 +44,15 @@ ok($Game::objects{ $room1->{id} } eq $room1, 'added to %objects');
 ok($room1->describe() eq 'room 1', 'description was correctly set');
 
 my $room2 = Game::Room->new(description => 'room 2');
+my $room3 = Game::Room->new(description => 'room 3');
 
 $room1->set_north($room2);
+$room2->set_east($room3);
 
 ok($room1->north eq $room2, 'room 2 is to the north of room1');
 ok($room2->south eq $room1, 'room 1 is to the south of room2');
+ok($room2->east eq $room3, 'room 3 is to the east of room2');
+ok($room3->west eq $room2, 'room 2 is to the west of room3');
 
 $game->save_all();
 
@@ -56,6 +60,7 @@ $game->save_all();
 my $gameid = $Game::gameid;
 my $room1id = $room1->{ id };
 my $room2id = $room2->{ id };
+my $room3id = $room3->{ id };
 
 # clear all
 undef($Game::gameid);
@@ -87,14 +92,20 @@ $game->load_all;
 
 $room1 = $Game::objects{$room1id};
 isa_ok($room1, 'Game::Room');
-ok($room1->describe() eq 'room 1', 'description was correctly set');
+ok($room1->describe() eq 'room 1', 'room1 description was correctly set');
 
 $room2 = $Game::objects{$room2id};
 isa_ok($room2, 'Game::Room');
-ok($room2->describe() eq 'room 2', 'description was correctly set');
+ok($room2->describe() eq 'room 2', 'room2 description was correctly set');
 
-ok($room1->north eq $room2, 'room 2 is to the north of room1');
-ok($room2->south eq $room1, 'room 1 is to the south of room2');
+$room3 = $Game::objects{$room3id};
+isa_ok($room3, 'Game::Room');
+ok($room3->describe() eq 'room 3', 'room3 description was correctly set');
+
+ok($room1->north eq $room2, 'room2 is to the north of room1');
+ok($room2->south eq $room1, 'room1 is to the south of room2');
+ok($room2->east eq $room3, 'room3 is to the east of room2');
+ok($room3->west eq $room2, 'room2 is to the west of room3');
 
 # change description of room
 #$room1->{description} = 'modified room 1';
