@@ -12,6 +12,7 @@ my $gameid = shift;
 my $game;
 if (defined $gameid) {
    $game = Game->load($db, $gameid);
+   die "No such game id" if $game;
    $game->load_all;
 } else {
    $game = new_game();
@@ -19,6 +20,11 @@ if (defined $gameid) {
 
 # get the Character object from $game
 my ($pc) = $game->list_of('Character');
+
+if ($pc->hp <= 0) { 
+   say "You are dead.";
+   exit;
+}
 
 look();
 while (1) {
@@ -113,13 +119,30 @@ sub go_west {
 
 
 sub attack {
+
    if (my $monster = $pc->location->monster) {
-      my $damage = $pc->attack($monster);
-      say "You attack $monster, dealing $damage damage.";
-      $damage = $monster->attack($pc);
-      say ucfirst($monster), " attacks you, dealing $damage damage.";
+
+      if ($monster->hp <= 0) {
+         say "You attack the corpse of $monster.";
+      } else {
+         my $damage = $pc->attack($monster);
+         say "You attack $monster, dealing $damage damage.";
+         if ($monster->hp <= 0) {
+            say ucfirst($monster), " is dead.";
+         } else {
+            $damage = $monster->attack($pc);
+            say ucfirst($monster), " attacks you, dealing $damage damage.";
+         }
+      }
+
    } else {
       say "You attack the darkness.";
+   }
+
+   if ($pc->hp <= 0) {
+      say "You are dead.";
+      $game->save_all;
+      exit 0;
    }
 }
 

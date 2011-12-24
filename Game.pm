@@ -42,6 +42,8 @@ sub load {
    $sth->execute($id, $Game::gameid);
    my $data = $sth->fetchrow_hashref;
 
+   return if !$data;
+
    # die if an object with that id already exists
    if (exists $Game::objects{id}) {
       Carp::croak "object with id $id already exists";
